@@ -4,7 +4,8 @@ export async function GET() {
   const { data: images, error } = await supabase
     .from("images")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("order_index", { ascending: true })
+    .order("id", { ascending: true });
 
   if (error) {
     return Response.json({ error: "Failed to fetch images" }, { status: 500 });

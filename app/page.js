@@ -4,7 +4,8 @@ export default async function Home() {
   const { data: images, error } = await supabase
     .from("images")
     .select("*")
-    .order("order_index", { ascending: true });
+    .order("order_index", { ascending: true })
+    .order("id", { ascending: true });
 
   if (error) {
     console.error(error);
