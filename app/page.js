@@ -1,9 +1,10 @@
 import { supabase } from "@/lib/supabase";
+import Gallery from "./components/Gallery";
 
 export default async function Home() {
   const { data: images, error } = await supabase
     .from("images")
-    .select("*")
+    .select("*, detail_images(*)")
     .order("order_index", { ascending: true })
     .order("id", { ascending: true });
 
@@ -17,23 +18,7 @@ export default async function Home() {
       <h1 className="text-4xl font-bold text-gray-500 text-center mb-8">
         Anna Karlsson
       </h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {images.map((image) => (
-          <div key={image.id} className="flex flex-col gap-2">
-            <img
-              src={image.url}
-              alt={image.title || ""}
-              className="w-full rounded-lg shadow object-cover aspect-square"
-            />
-            {image.title && (
-              <p className="text-gray-600 font-medium">{image.title}</p>
-            )}
-            {image.description && (
-              <p className="text-gray-400 text-sm">{image.description}</p>
-            )}
-          </div>
-        ))}
-      </div>
+      <Gallery images={images} />
     </main>
   );
 }

@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 export async function GET() {
   const { data: images, error } = await supabase
     .from("images")
-    .select("*")
+    .select("*, detail_images(*)")
     .order("order_index", { ascending: true })
     .order("id", { ascending: true });
 
