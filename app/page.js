@@ -1,24 +1,36 @@
-import { supabase } from "@/lib/supabase";
-import Gallery from "./components/Gallery";
+import Link from "next/link";
 
-export default async function Home() {
-  const { data: images, error } = await supabase
-    .from("images")
-    .select("*, detail_images(*)")
-    .order("order_index", { ascending: true })
-    .order("id", { ascending: true });
+// One entry per tile. To change a tile's image or label, edit it here.
+const sections = [
+  { href: "/gallery", label: "Gallery", image: "/front/gallery.png" },
+  { href: "/about", label: "About", image: "/front/about.png" },
+  { href: "/side-projects", label: "Side projects", image: "/front/side-projects.png" },
+  { href: "/contact", label: "Contact", image: "/front/contact.png" },
+];
 
-  if (error) {
-    console.error(error);
-    return <p>Failed to load images.</p>;
-  }
-
+export default function Home() {
   return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-4xl font-bold text-gray-500 text-center mb-8">
-        Anna Karlsson
-      </h1>
-      <Gallery images={images} />
+    <main className="min-h-screen flex flex-col items-center p-8">
+      <h1 className="text-4xl font-bold text-gray-600 mb-10">Anna Karlsson</h1>
+
+      {/* grid-cols-2 = always two columns, which gives 2x2 with four tiles.
+          max-w-3xl stops the grid from getting too large on wide screens. */}
+      <div className="grid grid-cols-2 gap-6 w-full max-w-5xl">
+        {sections.map((section) => (
+          <Link key={section.href} href={section.href} className="group">
+            {/* Lift effect: the tile moves up 4px and gets a stronger shadow on hover.
+                Nothing is scaled, so no part of the image is ever clipped. */}
+              <div className="overflow-hidden rounded-lg shadow transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
+                <img
+                  src={section.image}
+                  alt={section.label}
+                  className="w-full aspect-[3/2] object-cover"
+                />
+              </div>
+            <p className="text-center text-gray-600 mt-3 text-lg">{section.label}</p>
+          </Link>
+        ))}
+      </div>
     </main>
   );
 }

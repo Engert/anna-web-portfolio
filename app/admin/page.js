@@ -150,7 +150,7 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen p-8 max-w-4xl mx-auto">
       <a
-        href="/"
+        href="/gallery"
         className="text-gray-400 hover:text-gray-600 text-sm mb-4 inline-block"
       >
         ← Back to gallery
