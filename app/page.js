@@ -20,11 +20,11 @@ export default function Home() {
           <Link key={section.href} href={section.href} className="group">
             {/* Lift effect: the tile moves up 4px and gets a stronger shadow on hover.
                 Nothing is scaled, so no part of the image is ever clipped. */}
-              <div className="overflow-hidden rounded-lg shadow transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
+              <div className="overflow-hidden rounded-lg transition-all duration-300 group-hover:-translate-y-1">
                 <img
                   src={section.image}
                   alt={section.label}
-                  className="w-full aspect-[3/2] object-cover"
+                  className="w-full aspect-[3/2] object-cover dark:invert"
                 />
               </div>
             <p className="text-center text-gray-600 mt-3 text-lg">{section.label}</p>
