@@ -1,29 +1,45 @@
-"use client";
+"use client"; // Runs in the browser: needed for state, clicks, and drag-and-drop
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+
+// The categories an image can belong to.
+// value = what's stored in the database, label = what's shown in the UI.
+// To add a category later: add it here AND update the CHECK constraint in Supabase.
+const CATEGORIES = [
+  { value: "gallery", label: "Gallery" },
+  { value: "side-projects", label: "Side projects" },
+];
 
 export default function AdminPage() {
+  // --- Upload form state ---
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("gallery"); // category for the next upload
   const [uploading, setUploading] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState(null);
   const [error, setError] = useState(null);
+
+  // --- Image management state ---
+  const [viewCategory, setViewCategory] = useState("gallery"); // which tab is selected
   const [images, setImages] = useState([]);
   const [draggedId, setDraggedId] = useState(null);
-  const [expandedId, setExpandedId] = useState(null);
+  const [expandedId, setExpandedId] = useState(null); // which image's detail panel is open
   const [detailFile, setDetailFile] = useState(null);
   const [uploadingDetail, setUploadingDetail] = useState(false);
 
+  // Fetch only the images in the currently selected tab
   async function fetchImages() {
-    const res = await fetch("/api/images");
+    const res = await fetch(`/api/images?category=${viewCategory}`);
     const data = await res.json();
     setImages(data.images || []);
   }
 
+  // Runs on first load, and again every time the selected tab changes
   useEffect(() => {
     fetchImages();
-  }, []);
+  }, [viewCategory]);
 
   async function handleUpload() {
     if (!file) return;
@@ -34,6 +50,7 @@ export default function AdminPage() {
     formData.append("file", file);
     formData.append("title", title);
     formData.append("description", description);
+    formData.append("category", category);
 
     const res = await fetch("/api/upload", {
       method: "POST",
@@ -47,7 +64,13 @@ export default function AdminPage() {
       setTitle("");
       setDescription("");
       setFile(null);
-      fetchImages();
+      // Show the tab the image was uploaded to.
+      // Switching tabs triggers a fetch via useEffect; staying on the same tab doesn't, so fetch manually.
+      if (category !== viewCategory) {
+        setViewCategory(category);
+      } else {
+        fetchImages();
+      }
     } else {
       setError("Upload failed");
     }
@@ -86,6 +109,7 @@ export default function AdminPage() {
 
     const data = await res.json();
     if (data.success) {
+      // Remove the deleted detail image from local state without refetching everything
       setImages((prev) =>
         prev.map((img) =>
           img.id === parentId
@@ -123,14 +147,16 @@ export default function AdminPage() {
     setUploadingDetail(false);
   }
 
+  // --- Drag and drop reordering ---
   function handleDragStart(id) {
     setDraggedId(id);
   }
 
   function handleDragOver(e, overId) {
-    e.preventDefault();
+    e.preventDefault(); // Required for the browser to allow dropping here
     if (draggedId === overId) return;
 
+    // Move the dragged image to the position of the image being hovered over
     const dragged = images.find((img) => img.id === draggedId);
     const rest = images.filter((img) => img.id !== draggedId);
     const overIndex = rest.findIndex((img) => img.id === overId);
@@ -140,6 +166,8 @@ export default function AdminPage() {
 
   async function handleDragEnd() {
     setDraggedId(null);
+    // Save the new order. Only the current tab's images are sent,
+    // so each category keeps its own independent order.
     await fetch("/api/reorder", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -149,12 +177,12 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen p-8 max-w-4xl mx-auto">
-      <a
+      <Link
         href="/gallery"
         className="text-gray-400 hover:text-gray-600 text-sm mb-4 inline-block"
       >
         ← Back to gallery
-      </a>
+      </Link>
       <h1 className="text-3xl font-bold text-gray-600 mb-8">Admin</h1>
 
       {/* Upload section */}
@@ -166,6 +194,18 @@ export default function AdminPage() {
           onChange={(e) => setFile(e.target.files[0])}
           className="border p-2 rounded"
         />
+        {/* Category picker: decides which page the new image appears on */}
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="border p-2 rounded w-80"
+        >
+          {CATEGORIES.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
+        </select>
         <input
           type="text"
           placeholder="Title (optional)"
@@ -192,6 +232,24 @@ export default function AdminPage() {
 
       {/* Image management section */}
       <h2 className="text-xl font-semibold text-gray-500 mb-2">Manage Images</h2>
+
+      {/* Category tabs: the selected one is dark, the others light */}
+      <div className="flex gap-2 mb-4">
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.value}
+            onClick={() => setViewCategory(c.value)}
+            className={`px-4 py-1 rounded text-sm ${
+              viewCategory === c.value
+                ? "bg-gray-700 text-white"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
       <p className="text-gray-400 text-sm mb-4">Drag images to reorder them.</p>
       <div className="flex flex-col gap-8">
         {images.map((image) => (
@@ -221,7 +279,9 @@ export default function AdminPage() {
                     onClick={() => setExpandedId(expandedId === image.id ? null : image.id)}
                     className="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-500 text-sm"
                   >
-                    {expandedId === image.id ? "Hide details" : `Detail images (${image.detail_images?.length || 0})`}
+                    {expandedId === image.id
+                      ? "Hide details"
+                      : `Detail images (${image.detail_images?.length || 0})`}
                   </button>
                   <button
                     onClick={() => handleDelete(image.id, image.public_id)}
@@ -233,7 +293,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Detail images section */}
+            {/* Detail images panel, shown when expanded */}
             {expandedId === image.id && (
               <div className="mt-4 border-t pt-4">
                 <p className="text-gray-500 text-sm mb-3">Detail images</p>

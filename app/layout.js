@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Anna Karlsson Art",
+  title: "Anna Karlsson",
   description: "Portfolio of Anna Karlsson — textile artist",
   // Favicon configuration
   icons: {
@@ -25,7 +25,7 @@ export const metadata = {
   },
   // Open Graph — controls the preview when the URL is shared
   openGraph: {
-    title: "Anna Karlsson Art",
+    title: "Anna Karlsson",
     description: "Portfolio of Anna Karlsson — textile artist",
     url: "https://annakarlssonart.se",
     images: [

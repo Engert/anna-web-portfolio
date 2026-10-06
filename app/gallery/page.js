@@ -7,6 +7,7 @@ export default async function GalleryPage() {
   const { data: images, error } = await supabase
     .from("images")
     .select("*, detail_images(*)")
+    .eq("category", "gallery") // only show gallery images
     .order("order_index", { ascending: true })
     .order("id", { ascending: true }); // tiebreaker if two images share an order_index
 

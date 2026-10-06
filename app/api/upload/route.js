@@ -12,6 +12,7 @@ export async function POST(request) {
   const file = data.get("file");
   const title = data.get("title");
   const description = data.get("description");
+  const category = data.get("category") || "gallery"; // fall back to gallery if none was sent
 
   if (!file) {
     return Response.json({ error: "No file provided" }, { status: 400 });
@@ -34,11 +35,12 @@ export async function POST(request) {
   });
 
   const { error } = await supabaseAdmin.from("images").insert({
-    title: title || null,
-    description: description || null,
-    url: result.secure_url,
-    public_id: result.public_id,
-  });
+  title: title || null,
+  description: description || null,
+  url: result.secure_url,
+  public_id: result.public_id,
+  category: category,
+});
 
   if (error) {
     return Response.json({ error: "Database insert failed" }, { status: 500 });
